@@ -53,6 +53,21 @@ def main():
         action="store_true",
         help="Also save the raw transcript",
     )
+    parser.add_argument(
+        "--show-transcript",
+        action="store_true",
+        help="Print transcript to console and exit (skips minutes generation)",
+    )
+    parser.add_argument(
+        "--diarize",
+        action="store_true",
+        help="Identify individual speakers (requires HF_TOKEN)",
+    )
+    parser.add_argument(
+        "--hf-token",
+        default=os.getenv("HF_TOKEN"),
+        help="HuggingFace token for pyannote diarization models",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.file)
@@ -68,13 +83,24 @@ def main():
     print(f"  Input  : {input_path.name}")
     print(f"  Whisper: {args.whisper}")
     print(f"  Model  : {args.model}")
+    print(f"  Diarize: {'yes' if args.diarize else 'no'}")
     print(f"{'='*56}\n")
 
     # Step 1 — Transcribe
     print("[1/3] Transcribing audio...")
-    transcriber = Transcriber(model_size=args.whisper)
+    transcriber = Transcriber(
+        model_size=args.whisper,
+        diarize=args.diarize,
+        hf_token=args.hf_token,
+    )
     transcription = transcriber.transcribe(str(input_path))
     transcript_text = transcriber.full_text(transcription)
+
+    if args.show_transcript:
+        print("\n" + "─" * 56)
+        print(transcriber.timed_text(transcription))
+        print("─" * 56 + "\n")
+        return
 
     if args.transcript:
         transcript_path = str(output_base) + "_transcript.txt"

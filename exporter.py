@@ -99,7 +99,7 @@ class _PDF(FPDF):
     def bullet(self, text: str, indent: int = 8):
         self.set_font("Helvetica", "", 10)
         self.set_x(20 + indent)
-        self.multi_cell(0, 6, f"• {text}")
+        self.multi_cell(0, 6, f"- {text}")
 
     def action(self, num: int, action: str, owner: str, deadline: str):
         self.set_font("Helvetica", "B", 10)
@@ -157,7 +157,7 @@ def save_pdf(minutes: dict, source_file: str, output_path: str) -> str:
                 i,
                 ap.get("action", ""),
                 ap.get("owner") or "TBD",
-                ap.get("deadline") or "—",
+                ap.get("deadline") or "n/a",
             )
 
     # Decisions

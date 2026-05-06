@@ -1,0 +1,36 @@
+================================================================
+  MEETING MINUTES
+================================================================
+  Generated : 2026-05-06 13:14
+  Source    : meeting.mp4
+  Title     : Meeting on Event Support and Product Announcements
+
+SUMMARY
+----------------------------------------------------------------
+Discussion on event support needs and strategies for product announcements at upcoming conferences
+
+PARTICIPANTS
+----------------------------------------------------------------
+  • Speaker 1
+  • Speaker 2
+
+TOPICS DISCUSSED
+----------------------------------------------------------------
+  ▸ Event Support Strategy
+    Discussed the current event support strategy and need for improvement
+  ▸ Product Announcements Planning
+    Planned product announcements for upcoming conferences, focusing on features that have been developed over the past year
+
+ACTION POINTS
+----------------------------------------------------------------
+  1. Work with GTM teams to get support for events
+     Owner: TBD   Deadline: —
+  2. Get commitments from campaign managers for KubeCon event
+     Owner: TBD   Deadline: —
+
+DECISIONS
+----------------------------------------------------------------
+  ✓ Need support from GTM teams
+  ✓ Planned product announcements for upcoming conferences
+
+================================================================

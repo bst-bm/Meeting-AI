@@ -43,8 +43,11 @@ class MinutesGenerator:
                 "stream":      False,
                 "temperature": 0.1,
                 "format":      "json",
+                "options": {
+                    "num_ctx": 32768,
+                },
             },
-            timeout=180,
+            timeout=600,
         )
         response.raise_for_status()
         raw = response.json().get("response", "").strip()

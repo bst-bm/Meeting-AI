@@ -8,8 +8,8 @@ _NUM_CTX = 32768
 _RESPONSE_RESERVE = 1500  # tokens kept free for JSON output
 _CHARS_PER_TOKEN = 4      # heuristic for western languages (~4 chars/token)
 
-PROMPT = """You are an expert meeting analyst. Analyze the transcript below and extract structured meeting minutes.
-
+_PROMPT = """You are an expert meeting analyst. Analyze the transcript below and extract structured meeting minutes.
+{speakers_instruction}
 TRANSCRIPT:
 {transcript}
 
@@ -27,6 +27,12 @@ Return ONLY a valid JSON object with this exact structure (no explanation, no ma
   "decisions": ["Decision 1", "Decision 2"],
   "next_meeting": "Next meeting info if mentioned, otherwise null"
 }}"""
+
+_SPEAKERS_INSTRUCTION = """
+IMPORTANT: The following {n} speakers were detected in the transcript.
+List ALL of them in the participants array — do not omit any, even if they spoke only briefly:
+{speaker_list}
+"""
 
 
 class MinutesGenerator:
@@ -72,8 +78,20 @@ class MinutesGenerator:
                 f"  Note: Transcript is large (~{estimated:,} tokens, {usage_pct:.0%} of available context)."
             )
 
+    def _extract_speakers(self, transcript: str) -> list[str]:
+        return sorted(set(re.findall(r"^(SPEAKER_\d+):", transcript, re.MULTILINE)))
+
     def generate(self, transcript: str) -> dict:
-        prompt = PROMPT.format(transcript=transcript)
+        speakers = self._extract_speakers(transcript)
+        if speakers:
+            speakers_instruction = _SPEAKERS_INSTRUCTION.format(
+                n=len(speakers),
+                speaker_list=", ".join(speakers),
+            )
+        else:
+            speakers_instruction = ""
+
+        prompt = _PROMPT.format(transcript=transcript, speakers_instruction=speakers_instruction)
         self._check_context(prompt)
         print(f"  Sending transcript to Ollama ({self.model})...")
 

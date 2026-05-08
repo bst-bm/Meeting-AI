@@ -59,10 +59,12 @@ def main():
         help="Print transcript to console and exit (skips minutes generation)",
     )
     parser.add_argument(
-        "--diarize",
-        action="store_true",
-        help="Identify individual speakers (requires HF_TOKEN)",
+        "--no-diarize",
+        dest="diarize",
+        action="store_false",
+        help="Disable speaker diarization",
     )
+    parser.set_defaults(diarize=True)
     parser.add_argument(
         "--hf-token",
         default=os.getenv("HF_TOKEN"),

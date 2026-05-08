@@ -13,7 +13,9 @@ def _resolve_device(device: str) -> str:
         return device
     try:
         import torch
-        return "cuda" if torch.cuda.is_available() else "cpu"
+        # ROCm exposes itself as CUDA but ctranslate2 requires real NVIDIA CUDA
+        is_real_cuda = torch.cuda.is_available() and torch.version.hip is None
+        return "cuda" if is_real_cuda else "cpu"
     except ImportError:
         return "cpu"
 
@@ -60,43 +62,30 @@ class Transcriber:
             audio = whisperx.load_audio(tmp_path)
             result = self.model.transcribe(audio, batch_size=8)
 
-            # The HF session is cached with OfflineAdapter already mounted.
-            # Patch the constant AND reset the session cache via the official API.
-            import huggingface_hub.constants as _hf_const
-            from huggingface_hub import configure_http_backend
-            os.environ.pop("HF_HUB_OFFLINE", None)
-            os.environ.pop("TRANSFORMERS_OFFLINE", None)
-            _hf_const.HF_HUB_OFFLINE = False
-            configure_http_backend()  # clears LRU session cache, rebuilds without OfflineAdapter
-            prev_offline = None
-            try:
-                print("  Aligning timestamps...")
-                model_a, metadata = whisperx.load_align_model(
-                    language_code=result["language"], device=self._device
-                )
-                result = whisperx.align(
-                    result["segments"], model_a, metadata, audio, self._device,
-                    return_char_alignments=False,
-                )
+            print("  Aligning timestamps...")
+            model_a, metadata = whisperx.load_align_model(
+                language_code=result["language"], device=self._device
+            )
+            result = whisperx.align(
+                result["segments"], model_a, metadata, audio, self._device,
+                return_char_alignments=False,
+            )
 
-                if self._diarize:
-                    if not self._hf_token:
-                        raise ValueError(
-                            "HF_TOKEN required for diarization.\n"
-                            "  1. Accept model terms at https://hf.co/pyannote/speaker-diarization-3.1\n"
-                            "  2. Set HF_TOKEN=hf_... in .env or pass --hf-token"
-                        )
-                    print("  Running speaker diarization...")
-                    from whisperx.diarize import DiarizationPipeline
-                    diarize_model = DiarizationPipeline(
-                        token=self._hf_token,
-                        device=self._device,
+            if self._diarize:
+                if not self._hf_token:
+                    raise ValueError(
+                        "HF_TOKEN required for diarization.\n"
+                        "  1. Accept model terms at https://hf.co/pyannote/speaker-diarization-3.1\n"
+                        "  2. Set HF_TOKEN=hf_... in .env or pass --hf-token"
                     )
-                    diarize_segments = diarize_model(audio)
-                    result = whisperx.assign_word_speakers(diarize_segments, result)
-            finally:
-                if prev_offline is not None:
-                    os.environ["HF_HUB_OFFLINE"] = prev_offline
+                print("  Running speaker diarization...")
+                from whisperx.diarize import DiarizationPipeline
+                diarize_model = DiarizationPipeline(
+                    token=self._hf_token,
+                    device=self._device,
+                )
+                diarize_segments = diarize_model(audio)
+                result = whisperx.assign_word_speakers(diarize_segments, result)
 
         finally:
             Path(tmp_path).unlink(missing_ok=True)

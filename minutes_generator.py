@@ -110,7 +110,18 @@ class MinutesGenerator:
             timeout=600,
         )
         response.raise_for_status()
-        raw = response.json().get("response", "").strip()
+        resp_data = response.json()
+
+        if "error" in resp_data:
+            raise ValueError(f"Ollama error: {resp_data['error']}")
+
+        raw = resp_data.get("response", "").strip()
+        # Some models (e.g., nemotron) put JSON in the "thinking" field when format=json is used
+        if not raw and "thinking" in resp_data:
+            raw = resp_data.get("thinking", "").strip()
+
+        if not raw:
+            raise ValueError(f"Ollama returned empty response. Full response:\n{resp_data}")
 
         return self._parse_json(raw)
 

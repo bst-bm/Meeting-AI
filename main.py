@@ -23,8 +23,8 @@ def main():
     parser.add_argument("file", help="Path to MP4, MP3, WAV, or M4A file")
     parser.add_argument(
         "--model",
-        default=os.getenv("OLLAMA_MODEL", "qwen2.5:32b-instruct-q4_K_M"),
-        help="Ollama model to use (default: mistral:latest)",
+        default=os.getenv("OLLAMA_MODEL", "nemotron3:33b"),
+        help="Ollama model to use (default: nemotron3:33b)",
     )
     parser.add_argument(
         "--whisper",
